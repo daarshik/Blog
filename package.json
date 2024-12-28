@@ -19,5 +19,10 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "@lexical/react": "^0.21.0",
+    "antd": "^5.22.4",
+    "lexical": "^0.21.0"
+  }
 }
