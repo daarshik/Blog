@@ -36,6 +36,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => {
     const newToken = response.data.accessToken;
+    console.log(response);
 
     if (newToken) {
       useAuthStore.getState().setToken(newToken);
@@ -91,10 +92,27 @@ export const login = async ({ idToken }: any) => {
   }
 };
 
+export const getUserDetails = async () => {
+  try {
+    const response = await axiosInstance.get("/auth");
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 export const getAllBlogs = async () => {
   try {
     const response = await axiosInstance.get("/blogs");
     return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const logout = async () => {
+  try {
+    await axiosInstance.get("/auth/logout");
   } catch (error) {
     console.log(error);
   }

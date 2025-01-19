@@ -1,4 +1,4 @@
-const prisma = require("../prisma");
+const prisma = require("../schemaPrisma");
 
 // Create Blog
 const createBlog = async (req, res) => {

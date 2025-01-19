@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const admin = require("../firebase");
-const prisma = require("../prisma");
+const prisma = require("../schemaPrisma");
 const dotenv = require("dotenv");
 
 dotenv.config();
@@ -10,16 +10,13 @@ const signIn = async (req, res) => {
   const idToken = req.body.idToken;
 
   try {
-    // Verify Firebase ID token
     const decodedToken = await admin.auth().verifyIdToken(idToken);
 
     const email = decodedToken.email;
 
-    // Check if user exists in DB
     let user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      // Create a new user if doesn't exist
       user = await prisma.user.create({
         data: {
           email,
@@ -33,11 +30,12 @@ const signIn = async (req, res) => {
     const accessToken = jwt.sign(
       { email: user.email, id: user.id },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "1m" }
+      { expiresIn: "15m" }
     );
     const refreshToken = jwt.sign(
       { email: user.email, id: user.id },
-      process.env.REFRESH_TOKEN_SECRET
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: "1d" }
     );
 
     REFRESH_TOKENS.push(refreshToken);
@@ -66,9 +64,14 @@ const refresh = (req, res) => {
       const accessToken = jwt.sign(
         { email: user.email, id: user.id },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "1m" }
+        { expiresIn: "15m" }
       );
-      // res.cookie("accessToken", accessToken, { httpOnly: true });
+      const refreshToken = jwt.sign(
+        { email: user.email, id: user.id },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: "1d" }
+      );
+      res.cookie("refreshToken", refreshToken, { httpOnly: true });
       res.json({ accessToken });
     });
   } catch (error) {
@@ -77,9 +80,29 @@ const refresh = (req, res) => {
   }
 };
 
-const logout = (req, res) => {
-  res.clearCookie("refreshToken");
-  res.json({ message: "Logged out successfully" });
+const fetchUserDetail = (req, res) => {
+  if (!req.cookies.refreshToken)
+    return res.status(403).json({ error: "Unauthorized" });
+
+  try {
+    const decoded = jwt.verify(
+      req.cookies.refreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+    const accessToken = jwt.sign(
+      { email: decoded.email, id: decoded.id },
+      process.env.ACCESS_TOKEN_SECRET
+    );
+
+    return res.status(200).send({ accessToken, loggedIn: true });
+  } catch (error) {
+    return res.status(401).json({ error: "Token expired. Please refresh." });
+  }
 };
 
-module.exports = { signIn, logout, refresh };
+const logout = (req, res) => {
+  res.clearCookie("refreshToken");
+  res.json({ message: "Logged out successfully", loggedIn: false });
+};
+
+module.exports = { signIn, logout, refresh, fetchUserDetail };

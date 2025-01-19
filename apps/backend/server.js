@@ -5,6 +5,7 @@ dotenv.config();
 
 const userRoute = require("./routes/user");
 const blogRoute = require("./routes/blog");
+const paymentRoute = require("./routes/payment");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const port = 8000;
@@ -23,5 +24,6 @@ app.use(cookieParser());
 
 app.use("/auth", userRoute);
 app.use("/blogs", blogRoute);
+app.use("/payment", paymentRoute);
 
 app.listen(port, () => console.log(`Server Started at PORT:${port}`));

@@ -3,19 +3,23 @@ import React, { useEffect } from "react";
 import { useUserContext } from "../../context/UserContext";
 import dynamic from "next/dynamic";
 import { getAllBlogs } from "../api/auth";
+import useAuthStore from "../utils/useAuthStore";
 
 const OAuth = dynamic(() => import("../Components/OAuth"), { ssr: false });
 const Test = () => {
-  const { state, handleGoogleClick } = useUserContext();
+  const { state, handleGoogleClick, UserDetails } = useUserContext();
+  const token = useAuthStore((state) => state.token);
   const fxn = async () => await getAllBlogs();
+  console.log(token);
+
   useEffect(() => {
-    const res = fxn();
-    console.log(res);
-  }, []);
+    fxn();
+    UserDetails();
+  }, [token]);
 
   return (
     <div className="container p-12">
-      {state?.userProfile?.loggedIn ? (
+      {token ? (
         "Go to Test Page"
       ) : (
         <OAuth handleGoogleClick={handleGoogleClick} />

@@ -9,12 +9,12 @@ import React, {
 } from "react";
 import { app } from "../firebase";
 import { useRouter } from "next/navigation";
-import { checkUser, login } from "../app/api/auth";
+import { checkUser, getUserDetails, login } from "../app/api/auth";
 
 // Define types for the user profile
 type UserProfile = {
   name: string;
-  email: string;
+  accessToken: string;
   loggedIn: boolean;
 };
 
@@ -37,7 +37,7 @@ const initialState: StateType = {
   isLoaded: true,
   userProfile: {
     name: "",
-    email: "",
+    accessToken: "",
     loggedIn: false,
   },
 };
@@ -47,6 +47,7 @@ interface UserContextType {
   state: StateType;
   setLoading: (isLoading: boolean) => void;
   handleGoogleClick: () => void;
+  UserDetails: () => void;
 }
 
 // Create the context
@@ -78,10 +79,12 @@ function UserProvider({ children }: UserProviderProps) {
   const router = useRouter();
 
   // Check if user is already authenticated (on page load)
-  // useEffect(() => {
-  //   const res = checkUser();
-  //   dispatch({ type: "SET_USER_PROFILE", payload: res?.data });
-  // }, []);
+
+  function UserDetails() {
+    const res = getUserDetails();
+
+    dispatch({ type: "SET_USER_PROFILE", payload: res?.data });
+  }
 
   // Set loading state
   function setLoading(isLoading: boolean) {
@@ -116,6 +119,7 @@ function UserProvider({ children }: UserProviderProps) {
     state,
     setLoading,
     handleGoogleClick,
+    UserDetails,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
